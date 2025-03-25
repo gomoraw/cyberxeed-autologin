@@ -10,16 +10,36 @@ window.addEventListener('load', function() {
     console.log('CYBERXEED自動ログイン: ログインページを検出しました');
     
     // Chrome Storageからログイン情報を取得
-    chrome.storage.sync.get('cyberxeedLogin', function(data) {
+    chrome.storage.sync.get('cyberxeedLogin', async function(data) {
       if (data.cyberxeedLogin) {
-        // ログイン情報が保存されている場合
-        const loginInfo = data.cyberxeedLogin;
-        console.log('CYBERXEED自動ログイン: 保存されたログイン情報を取得しました');
-        
-        // ログインフォームが表示されるまで少し待機
-        setTimeout(function() {
-          performAutoLogin(loginInfo.companyCode, loginInfo.employeeCode, loginInfo.password);
-        }, 1000);
+        try {
+          // ログイン情報が保存されている場合
+          const loginInfo = data.cyberxeedLogin;
+          console.log('CYBERXEED自動ログイン: 保存されたログイン情報を取得しました');
+          
+          // 暗号化されているかどうかを確認
+          if (loginInfo.isEncrypted) {
+            // 暗号化キーを取得
+            const encryptionKey = await getEncryptionKey();
+            
+            // 暗号化されたデータを復号化
+            const companyCode = decryptData(loginInfo.companyCode, encryptionKey);
+            const employeeCode = decryptData(loginInfo.employeeCode, encryptionKey);
+            const password = decryptData(loginInfo.password, encryptionKey);
+            
+            // ログインフォームが表示されるまで少し待機
+            setTimeout(function() {
+              performAutoLogin(companyCode, employeeCode, password);
+            }, 1000);
+          } else {
+            // 暗号化されていない古いデータの場合はそのまま使用
+            setTimeout(function() {
+              performAutoLogin(loginInfo.companyCode, loginInfo.employeeCode, loginInfo.password);
+            }, 1000);
+          }
+        } catch (error) {
+          console.error('CYBERXEED自動ログイン: ログイン情報の復号化に失敗しました', error);
+        }
       } else {
         // ログイン情報が保存されていない場合
         console.log('CYBERXEED自動ログイン: 保存されたログイン情報がありません。設定画面で設定してください。');

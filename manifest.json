@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "CYBERXEED 自動ログイン",
-  "version": "1.1",
-  "description": "CYBERXEEDシステムに自動的にログインする拡張機能",
+  "version": "1.2",
+  "description": "CYBERXEEDシステムに自動的にログインする拡張機能（ログイン情報暗号化対応）",
   "permissions": [
     "storage",
     "tabs",
@@ -17,7 +17,7 @@
   "content_scripts": [
     {
       "matches": ["https://cxg9.i-abs.co.jp/CYBERXEED/*"],
-      "js": ["content.js"]
+      "js": ["encryption.js", "content.js"]
     }
   ],
   "action": {

@@ -40,17 +40,29 @@
     button:hover {
       background-color: #005a9e;
     }
+    .security-badge {
+      display: inline-block;
+      background-color: #28a745;
+      color: white;
+      font-size: 10px;
+      padding: 2px 5px;
+      border-radius: 3px;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
   </style>
 </head>
 <body>
-  <h1>CYBERXEED 自動ログイン</h1>
+  <h1>CYBERXEED 自動ログイン <span class="security-badge">暗号化対応</span></h1>
   <div class="status">
     <p>状態: <span id="status">準備完了</span></p>
   </div>
   <button id="settingsButton">ログイン情報を設定</button>
   <div class="footer">
     <p>CYBERXEEDシステムに自動的にログインします</p>
+    <p style="font-size: 10px;">ログイン情報は暗号化されて安全に保存されます</p>
   </div>
+  <script src="encryption.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

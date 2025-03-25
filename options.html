@@ -53,6 +53,13 @@
       background-color: #f2dede;
       color: #a94442;
     }
+    .security-info {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #f8f8f8;
+      border-left: 4px solid #0078d4;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
@@ -77,6 +84,11 @@
   
   <div id="status" class="status" style="display: none;"></div>
   
+  <div class="security-info">
+    <p><strong>セキュリティ情報:</strong> 入力されたログイン情報は暗号化されて保存されます。他のユーザーやアプリケーションからアクセスすることはできません。</p>
+  </div>
+  
+  <script src="encryption.js"></script>
   <script src="options.js"></script>
 </body>
 </html>
