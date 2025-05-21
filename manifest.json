@@ -1,25 +1,13 @@
 {
+  "name": "CYBERXEED自動ログイン",
+  "version": "1.5.3",
   "manifest_version": 3,
-  "name": "CYBERXEED 自動ログイン",
-  "version": "1.2",
-  "description": "CYBERXEEDシステムに自動的にログインする拡張機能（ログイン情報暗号化対応）",
-  "permissions": [
-    "storage",
-    "tabs",
-    "scripting"
-  ],
-  "host_permissions": [
-    "https://cxg9.i-abs.co.jp/CYBERXEED/*"
-  ],
-  "background": {
-    "service_worker": "background.js"
+  "description": "CYBERXEEDシステムの自動ログイン機能を提供する拡張機能",
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
   },
-  "content_scripts": [
-    {
-      "matches": ["https://cxg9.i-abs.co.jp/CYBERXEED/*"],
-      "js": ["encryption.js", "content.js"]
-    }
-  ],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -28,13 +16,30 @@
       "128": "images/icon128.png"
     }
   },
+  "background": {
+    "service_worker": "background.js"
+  },
   "options_ui": {
     "page": "options.html",
     "open_in_tab": true
   },
-  "icons": {
-    "16": "images/icon16.png",
-    "48": "images/icon48.png",
-    "128": "images/icon128.png"
-  }
+  "permissions": [
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "https://cxg9.i-abs.co.jp/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://cxg9.i-abs.co.jp/*"],
+      "js": ["encryption.js", "content.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["images/*"],
+      "matches": ["https://cxg9.i-abs.co.jp/*"]
+    }
+  ]
 }

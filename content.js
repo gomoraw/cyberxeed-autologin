@@ -1,16 +1,36 @@
 // content.js
-// CYBERXEEDシステムへの自動ログイン機能
+// CYBERXEEDシステムへの自動ログイン機能（簡素化版）
+
+// バックグラウンドに直接復号化を依頼する関数
+async function decryptViaBackground(encryptedText) {
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage({ 
+      action: 'decryptData', 
+      data: encryptedText 
+    }, function(response) {
+      if (chrome.runtime.lastError || !response || !response.success) {
+        console.error('バックグラウンドでの復号化に失敗しました:', chrome.runtime.lastError || (response ? response.error : '不明なエラー'));
+        resolve('');
+      } else {
+        resolve(response.result);
+      }
+    });
+  });
+}
 
 // ページが完全に読み込まれたら実行
-window.addEventListener('load', function() {
+window.addEventListener('load', async function() {
   console.log('CYBERXEED自動ログイン: コンテンツスクリプトが実行されました');
   
-  // URLがCYBERXEEDのログインページかどうかを確認
-  if (window.location.href.includes('https://cxg9.i-abs.co.jp/CYBERXEED/')) {
-    console.log('CYBERXEED自動ログイン: ログインページを検出しました');
+  // 設定を取得してURLを確認
+  chrome.storage.sync.get(['cyberxeedLogin', 'cyberxeedUrl'], async function(data) {
+    // 設定からURLを取得
+    const cyberxeedUrl = data.cyberxeedUrl || 'https://cxg9.i-abs.co.jp/CYBERXEED/';
     
-    // Chrome Storageからログイン情報を取得
-    chrome.storage.sync.get('cyberxeedLogin', async function(data) {
+    // URLがCYBERXEEDのログインページかどうかを確認
+    if (window.location.href.includes(cyberxeedUrl)) {
+      console.log('CYBERXEED自動ログイン: ログインページを検出しました');
+      
       if (data.cyberxeedLogin) {
         try {
           // ログイン情報が保存されている場合
@@ -19,13 +39,16 @@ window.addEventListener('load', function() {
           
           // 暗号化されているかどうかを確認
           if (loginInfo.isEncrypted) {
-            // 暗号化キーを取得
-            const encryptionKey = await getEncryptionKey();
+            // バックグラウンドに直接復号化を依頼
+            const companyCode = await decryptViaBackground(loginInfo.companyCode);
+            const employeeCode = await decryptViaBackground(loginInfo.employeeCode);
+            const password = await decryptViaBackground(loginInfo.password);
             
-            // 暗号化されたデータを復号化
-            const companyCode = decryptData(loginInfo.companyCode, encryptionKey);
-            const employeeCode = decryptData(loginInfo.employeeCode, encryptionKey);
-            const password = decryptData(loginInfo.password, encryptionKey);
+            // 復号化結果の検証
+            if (!companyCode || !employeeCode || !password) {
+              console.error('CYBERXEED自動ログイン: ログイン情報の復号化に失敗しました');
+              return;
+            }
             
             // ログインフォームが表示されるまで少し待機
             setTimeout(function() {
@@ -44,8 +67,8 @@ window.addEventListener('load', function() {
         // ログイン情報が保存されていない場合
         console.log('CYBERXEED自動ログイン: 保存されたログイン情報がありません。設定画面で設定してください。');
       }
-    });
-  }
+    }
+  });
 });
 
 // 自動ログイン処理を実行する関数

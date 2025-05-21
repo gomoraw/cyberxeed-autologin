@@ -1,71 +1,66 @@
-// options.js
-// 設定画面のスクリプト（簡素化版）
+// popup_integrated.js
+// ポップアップ画面のスクリプト（設定機能統合版）
 
 // DOMが読み込まれたら実行
 document.addEventListener('DOMContentLoaded', function() {
-  console.log('CYBERXEED自動ログイン: 設定画面が読み込まれました');
+  // メイン画面の要素
+  const statusElement = document.getElementById('status');
+  const loginInfoElement = document.getElementById('loginInfo');
+  const settingsButton = document.getElementById('settingsButton');
+  const mainPanel = document.getElementById('mainPanel');
   
-  // 要素の取得
+  // 設定画面の要素
+  const settingsPanel = document.getElementById('settingsPanel');
   const companyCodeInput = document.getElementById('companyCode');
   const employeeCodeInput = document.getElementById('employeeCode');
   const passwordInput = document.getElementById('password');
   const cyberxeedUrlInput = document.getElementById('cyberxeedUrl');
-  const newCyberxeedUrlInput = document.getElementById('newCyberxeedUrl');
   const saveButton = document.getElementById('saveButton');
-  const statusDiv = document.getElementById('status');
-  const changeUrlButton = document.getElementById('changeUrlButton');
-  const urlStep = document.getElementById('urlStep');
-  const confirmUrlButton = document.getElementById('confirmUrlButton');
-  const cancelUrlButton = document.getElementById('cancelUrlButton');
-  const advancedSettingsToggle = document.getElementById('advancedSettingsToggle');
-  const advancedSettingsContent = document.getElementById('advancedSettingsContent');
+  const backButton = document.getElementById('backButton');
+  const settingsStatusElement = document.getElementById('settingsStatus');
+  const tabs = document.querySelectorAll('.tab');
+  const tabContents = document.querySelectorAll('.tab-content');
   
-  // 詳細設定の表示/非表示を切り替える
-  advancedSettingsToggle.addEventListener('click', function() {
-    const isVisible = advancedSettingsContent.classList.contains('visible');
-    if (isVisible) {
-      advancedSettingsContent.classList.remove('visible');
-      advancedSettingsToggle.textContent = '詳細設定を表示 ▼';
-    } else {
-      advancedSettingsContent.classList.add('visible');
-      advancedSettingsToggle.textContent = '詳細設定を非表示 ▲';
-    }
+  // タブ切り替え
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function() {
+      // アクティブなタブを変更
+      tabs.forEach(t => t.classList.remove('active'));
+      this.classList.add('active');
+      
+      // タブコンテンツを切り替え
+      const tabId = this.getAttribute('data-tab');
+      tabContents.forEach(content => {
+        content.classList.remove('active');
+        if (content.id === tabId) {
+          content.classList.add('active');
+        }
+      });
+    });
   });
   
-  // URL変更ボタンのクリックイベント
-  changeUrlButton.addEventListener('click', function() {
-    // 現在のURLを新しいURL入力欄にコピー
-    newCyberxeedUrlInput.value = cyberxeedUrlInput.value;
-    // URL変更ステップを表示
-    urlStep.classList.add('active');
-    // 新しいURL入力欄にフォーカス
-    newCyberxeedUrlInput.focus();
+  // 設定ボタンのクリックイベント
+  settingsButton.addEventListener('click', function() {
+    // メイン画面を非表示
+    mainPanel.style.display = 'none';
+    
+    // 設定画面を表示
+    settingsPanel.style.display = 'block';
+    
+    // 保存された設定を読み込む
+    loadSettings();
   });
   
-  // URL変更確定ボタンのクリックイベント
-  confirmUrlButton.addEventListener('click', function() {
-    // 新しいURLを取得
-    const newUrl = newCyberxeedUrlInput.value.trim();
+  // 戻るボタンのクリックイベント
+  backButton.addEventListener('click', function() {
+    // 設定画面を非表示
+    settingsPanel.style.display = 'none';
     
-    // URLの形式を検証
-    if (!newUrl || !isValidUrl(newUrl)) {
-      showStatus('URLの形式が正しくありません。', 'error');
-      return;
-    }
+    // メイン画面を表示
+    mainPanel.style.display = 'block';
     
-    // URLを更新
-    cyberxeedUrlInput.value = newUrl;
-    
-    // URL変更ステップを非表示
-    urlStep.classList.remove('active');
-    
-    showStatus('URLが更新されました。', 'success');
-  });
-  
-  // URL変更キャンセルボタンのクリックイベント
-  cancelUrlButton.addEventListener('click', function() {
-    // URL変更ステップを非表示
-    urlStep.classList.remove('active');
+    // メイン画面の情報を更新
+    updateMainInfo();
   });
   
   // 保存ボタンのクリックイベント
@@ -75,22 +70,22 @@ document.addEventListener('DOMContentLoaded', function() {
       const companyCode = companyCodeInput.value.trim();
       const employeeCode = employeeCodeInput.value.trim();
       const password = passwordInput.value;
-      const cyberxeedUrl = cyberxeedUrlInput.value.trim();
+      const cyberxeedUrl = cyberxeedUrlInput.value.trim() || 'https://cxg9.i-abs.co.jp/CYBERXEED/';
       
       // 必須項目の検証
       if (!companyCode || !employeeCode || !password) {
-        showStatus('すべての必須項目を入力してください。', 'error');
+        showSettingsStatus('すべての必須項目を入力してください。', 'error');
         return;
       }
       
       // URLの形式を検証
       if (!isValidUrl(cyberxeedUrl)) {
-        showStatus('URLの形式が正しくありません。', 'error');
+        showSettingsStatus('URLの形式が正しくありません。', 'error');
         return;
       }
       
       // 保存中のステータスを表示
-      showStatus('設定を保存しています...', '');
+      showSettingsStatus('設定を保存しています...', '');
       
       // バックグラウンドに暗号化を依頼
       chrome.runtime.sendMessage(
@@ -102,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function(response1) {
           if (chrome.runtime.lastError || !response1 || !response1.success) {
             console.error('会社コードの暗号化に失敗しました:', chrome.runtime.lastError);
-            showStatus('ログイン情報の暗号化に失敗しました。', 'error');
+            showSettingsStatus('ログイン情報の暗号化に失敗しました。', 'error');
             return;
           }
           
@@ -117,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
             function(response2) {
               if (chrome.runtime.lastError || !response2 || !response2.success) {
                 console.error('従業員コードの暗号化に失敗しました:', chrome.runtime.lastError);
-                showStatus('ログイン情報の暗号化に失敗しました。', 'error');
+                showSettingsStatus('ログイン情報の暗号化に失敗しました。', 'error');
                 return;
               }
               
@@ -132,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 function(response3) {
                   if (chrome.runtime.lastError || !response3 || !response3.success) {
                     console.error('パスワードの暗号化に失敗しました:', chrome.runtime.lastError);
-                    showStatus('ログイン情報の暗号化に失敗しました。', 'error');
+                    showSettingsStatus('ログイン情報の暗号化に失敗しました。', 'error');
                     return;
                   }
                   
@@ -150,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function() {
                   }, function() {
                     if (chrome.runtime.lastError) {
                       console.error('設定の保存に失敗しました:', chrome.runtime.lastError);
-                      showStatus('設定の保存に失敗しました。', 'error');
+                      showSettingsStatus('設定の保存に失敗しました。', 'error');
                       return;
                     }
                     
@@ -160,7 +155,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         console.log('バックグラウンドへの通知に失敗しましたが、設定は保存されています:', chrome.runtime.lastError);
                       }
                       
-                      showStatus('設定が保存されました。', 'success');
+                      showSettingsStatus('設定が保存されました。', 'success');
+                      
+                      // 3秒後にメイン画面に戻る
+                      setTimeout(function() {
+                        // 設定画面を非表示
+                        settingsPanel.style.display = 'none';
+                        
+                        // メイン画面を表示
+                        mainPanel.style.display = 'block';
+                        
+                        // メイン画面の情報を更新
+                        updateMainInfo();
+                      }, 3000);
                     });
                   });
                 }
@@ -171,27 +178,28 @@ document.addEventListener('DOMContentLoaded', function() {
       );
     } catch (error) {
       console.error('設定保存中にエラーが発生しました:', error);
-      showStatus('設定保存中にエラーが発生しました。', 'error');
+      showSettingsStatus('設定保存中にエラーが発生しました。', 'error');
     }
   });
   
-  // 保存された設定を読み込む
-  loadSettings();
+  // 初期表示
+  updateMainInfo();
 });
 
 // 保存された設定を読み込む関数
 function loadSettings() {
   console.log('CYBERXEED自動ログイン: 設定を読み込んでいます');
   
+  const cyberxeedUrlInput = document.getElementById('cyberxeedUrl');
+  
   chrome.storage.sync.get(['cyberxeedLogin', 'cyberxeedUrl'], function(data) {
     if (chrome.runtime.lastError) {
       console.error('設定の読み込みに失敗しました:', chrome.runtime.lastError);
-      showStatus('設定の読み込みに失敗しました。', 'error');
+      showSettingsStatus('設定の読み込みに失敗しました。', 'error');
       return;
     }
     
     // URL設定
-    const cyberxeedUrlInput = document.getElementById('cyberxeedUrl');
     if (data.cyberxeedUrl) {
       cyberxeedUrlInput.value = data.cyberxeedUrl;
     } else {
@@ -214,7 +222,7 @@ function loadSettings() {
             function(response1) {
               if (chrome.runtime.lastError || !response1 || !response1.success) {
                 console.error('会社コードの復号化に失敗しました:', chrome.runtime.lastError);
-                showStatus('保存されたログイン情報の復号化に失敗しました。', 'error');
+                showSettingsStatus('保存されたログイン情報の復号化に失敗しました。', 'error');
                 return;
               }
               
@@ -256,7 +264,7 @@ function loadSettings() {
           );
         } catch (error) {
           console.error('ログイン情報の復号化中にエラーが発生しました:', error);
-          showStatus('ログイン情報の復号化中にエラーが発生しました。', 'error');
+          showSettingsStatus('ログイン情報の復号化中にエラーが発生しました。', 'error');
         }
       } else {
         // 暗号化されていない古いデータの場合はそのまま使用
@@ -268,9 +276,37 @@ function loadSettings() {
   });
 }
 
-// ステータスメッセージを表示する関数
-function showStatus(message, type) {
-  const statusDiv = document.getElementById('status');
+// メイン画面の情報を更新する関数
+function updateMainInfo() {
+  const statusElement = document.getElementById('status');
+  const loginInfoElement = document.getElementById('loginInfo');
+  
+  chrome.storage.sync.get(['cyberxeedLogin', 'cyberxeedUrl'], function(data) {
+    if (chrome.runtime.lastError) {
+      console.error('設定の取得に失敗しました:', chrome.runtime.lastError);
+      statusElement.textContent = '設定の取得に失敗しました。';
+      statusElement.className = 'status error';
+      return;
+    }
+    
+    // ログイン情報が保存されているかどうかを確認
+    if (data.cyberxeedLogin) {
+      // ログイン情報が保存されている場合
+      loginInfoElement.textContent = 'ログイン情報が保存されています。';
+      statusElement.textContent = '自動ログイン機能は有効です。';
+      statusElement.className = 'status success';
+    } else {
+      // ログイン情報が保存されていない場合
+      loginInfoElement.textContent = 'ログイン情報が保存されていません。';
+      statusElement.textContent = '設定画面でログイン情報を設定してください。';
+      statusElement.className = 'status warning';
+    }
+  });
+}
+
+// 設定画面のステータスメッセージを表示する関数
+function showSettingsStatus(message, type) {
+  const statusDiv = document.getElementById('settingsStatus');
   statusDiv.textContent = message;
   statusDiv.className = 'status';
   

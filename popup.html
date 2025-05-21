@@ -5,25 +5,43 @@
   <meta charset="UTF-8">
   <style>
     body {
-      width: 300px;
-      padding: 10px;
       font-family: sans-serif;
+      margin: 0;
+      padding: 15px;
+      width: 350px;
     }
     h1 {
-      font-size: 16px;
-      text-align: center;
+      font-size: 18px;
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #333;
     }
     .status {
-      margin: 10px 0;
       padding: 10px;
-      border-radius: 5px;
-      background-color: #f0f0f0;
+      border-radius: 4px;
+      margin-bottom: 15px;
     }
-    .footer {
-      font-size: 12px;
-      text-align: center;
-      margin-top: 15px;
-      color: #666;
+    .success {
+      background-color: #dff0d8;
+      color: #3c763d;
+    }
+    .warning {
+      background-color: #fcf8e3;
+      color: #8a6d3b;
+    }
+    .error {
+      background-color: #f2dede;
+      color: #a94442;
+    }
+    .info-section {
+      margin-bottom: 15px;
+    }
+    .info-label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .info-value {
+      margin-bottom: 10px;
     }
     button {
       background-color: #0078d4;
@@ -33,36 +51,132 @@
       border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
-      display: block;
-      margin: 15px auto;
-      width: 80%;
+      width: 100%;
+      margin-bottom: 10px;
     }
     button:hover {
       background-color: #005a9e;
     }
-    .security-badge {
-      display: inline-block;
-      background-color: #28a745;
+    .footer {
+      font-size: 12px;
+      color: #666;
+      margin-top: 15px;
+      text-align: center;
+    }
+    
+    /* 設定画面のスタイル */
+    #settingsPanel {
+      display: none;
+      margin-top: 15px;
+      border-top: 1px solid #ddd;
+      padding-top: 15px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="text"], input[type="password"], input[type="url"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    .security-info {
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #f8f8f8;
+      border-left: 4px solid #0078d4;
+      font-size: 13px;
+    }
+    .tab-container {
+      display: flex;
+      margin-bottom: 15px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px;
+      background-color: #f0f0f0;
+      cursor: pointer;
+    }
+    .tab.active {
+      background-color: #0078d4;
       color: white;
-      font-size: 10px;
-      padding: 2px 5px;
-      border-radius: 3px;
-      margin-left: 5px;
-      vertical-align: middle;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
     }
   </style>
 </head>
 <body>
-  <h1>CYBERXEED 自動ログイン <span class="security-badge">暗号化対応</span></h1>
-  <div class="status">
-    <p>状態: <span id="status">準備完了</span></p>
+  <h1>CYBERXEED 自動ログイン</h1>
+  
+  <div id="mainPanel">
+    <div id="status" class="status">ステータスを確認中...</div>
+    
+    <div class="info-section">
+      <div class="info-label">ログイン情報:</div>
+      <div id="loginInfo" class="info-value">確認中...</div>
+    </div>
+    
+    <button id="settingsButton">設定画面を表示</button>
+    
+    <div class="footer">
+      バージョン 1.5.3
+    </div>
   </div>
-  <button id="settingsButton">ログイン情報を設定</button>
-  <div class="footer">
-    <p>CYBERXEEDシステムに自動的にログインします</p>
-    <p style="font-size: 10px;">ログイン情報は暗号化されて安全に保存されます</p>
+  
+  <div id="settingsPanel">
+    <div class="tab-container">
+      <div class="tab active" data-tab="loginSettings">ログイン設定</div>
+      <div class="tab" data-tab="advancedSettings">詳細設定</div>
+    </div>
+    
+    <div id="loginSettings" class="tab-content active">
+      <div class="form-group">
+        <label for="companyCode">会社コード:</label>
+        <input type="text" id="companyCode" placeholder="会社コードを入力">
+      </div>
+      
+      <div class="form-group">
+        <label for="employeeCode">従業員コード:</label>
+        <input type="text" id="employeeCode" placeholder="従業員コードを入力">
+      </div>
+      
+      <div class="form-group">
+        <label for="password">パスワード:</label>
+        <input type="password" id="password" placeholder="パスワードを入力">
+      </div>
+    </div>
+    
+    <div id="advancedSettings" class="tab-content">
+      <div class="form-group">
+        <label for="cyberxeedUrl">CYBERXEED URL:</label>
+        <input type="url" id="cyberxeedUrl" placeholder="https://cxg9.i-abs.co.jp/CYBERXEED/">
+        <div class="url-info">※ URLの変更は通常必要ありません。システム管理者から指示があった場合のみ変更してください。</div>
+      </div>
+    </div>
+    
+    <button id="saveButton">設定を保存</button>
+    <button id="backButton">戻る</button>
+    
+    <div id="settingsStatus" class="status" style="display: none;"></div>
+    
+    <div class="security-info">
+      <p><strong>セキュリティ情報:</strong> 入力されたログイン情報は暗号化されて保存されます。他のユーザーやアプリケーションからアクセスすることはできません。</p>
+    </div>
   </div>
+  
   <script src="encryption.js"></script>
-  <script src="popup.js"></script>
+  <script src="security_utils.js"></script>
+  <script src="popup_integrated.js"></script>
 </body>
 </html>
